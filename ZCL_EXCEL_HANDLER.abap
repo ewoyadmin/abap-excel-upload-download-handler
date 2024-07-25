@@ -217,6 +217,13 @@ CLASS zcl_excel_handler IMPLEMENTATION.
 
     SPLIT iv_line AT mv_separator INTO TABLE lt_values.
 
+    " Raise exception if separator is found in column's value
+    IF lines( it_components ) NE lines( lt_values ).
+      RAISE EXCEPTION TYPE zcx_excel_handler
+          EXPORTING
+            textid = zcx_excel_handler=>invalid_delimiter.
+    ENDIF.
+
     LOOP AT it_components INTO DATA(ls_component).
       lv_value = VALUE #( lt_values[ sy-tabix ] OPTIONAL ).
       ASSIGN COMPONENT ls_component-name OF STRUCTURE <fs_line> TO <fs_value>.
