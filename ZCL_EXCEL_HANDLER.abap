@@ -3,33 +3,35 @@
 "! This class supports XLSX and CSV file formats for uploading and downloading data
 "! from/to SAP from/to PC and application server.
 "! </p>
-CLASS zcl_excel_handler DEFINITION PUBLIC FINAL CREATE PUBLIC.
+class ZCL_EXCEL_HANDLER definition
+  public
+  final
+  create public .
 
-  PUBLIC SECTION.
+public section.
+
     "! Constructor
     "! @parameter iv_separator | Column separator for CSV files (default is semicolon)
     "! @raising zcx_excel_handler | Exception if invalid separator is provided
-    METHODS constructor
-      IMPORTING
-        VALUE(iv_separator) TYPE c DEFAULT ';'
-      RAISING
-        zcx_excel_handler.
-
+  methods CONSTRUCTOR
+    importing
+      value(IV_SEPARATOR) type C default ';'
+    raising
+      ZCX_EXCEL_HANDLER .
     "! Upload CSV file
     "! @parameter iv_file_path | Path to the CSV file
     "! @parameter iv_server | Flag to indicate if file is on application server
     "! @parameter iv_hdr_lines | Number of header lines to skip
     "! @parameter ir_table | Reference to the internal table to store data
     "! @raising zcx_excel_handler | Exception if upload fails
-    METHODS upload_csv
-      IMPORTING
-        VALUE(iv_file_path) TYPE string OPTIONAL
-        VALUE(iv_server)    TYPE abap_bool DEFAULT abap_false
-        VALUE(iv_hdr_lines) TYPE i DEFAULT 1
-        ir_table            TYPE REF TO data
-      RAISING
-        zcx_excel_handler.
-
+  methods UPLOAD_CSV
+    importing
+      value(IV_FILE_PATH) type STRING optional
+      value(IV_SERVER) type ABAP_BOOL default ABAP_FALSE
+      value(IV_HDR_LINES) type I default 1
+      !IR_TABLE type ref to DATA
+    raising
+      ZCX_EXCEL_HANDLER .
     "! Download CSV file
     "! @parameter iv_file_path | Path to save the CSV file
     "! @parameter iv_server | Flag to indicate if file should be saved on application server
@@ -37,46 +39,45 @@ CLASS zcl_excel_handler DEFINITION PUBLIC FINAL CREATE PUBLIC.
     "! @parameter ir_table | Reference to the internal table with data
     "! @parameter rv_bytes_written | Number of bytes written
     "! @raising zcx_excel_handler | Exception if download fails
-    METHODS download_csv
-      IMPORTING
-        VALUE(iv_file_path)     TYPE string OPTIONAL
-        VALUE(iv_server)        TYPE abap_bool DEFAULT abap_false
-        VALUE(iv_header)        TYPE abap_bool DEFAULT abap_true
-        ir_table                TYPE REF TO data
-      RETURNING
-        VALUE(rv_bytes_written) TYPE i
-      RAISING
-        zcx_excel_handler.
-
+  methods DOWNLOAD_CSV
+    importing
+      value(IV_FILE_PATH) type STRING optional
+      value(IV_APPEND) type ABAP_BOOL default ABAP_FALSE
+      value(IV_CONF_OVERWRITE) type ABAP_BOOL default ABAP_FALSE
+      value(IV_SERVER) type ABAP_BOOL default ABAP_FALSE
+      value(IV_HEADER) type ABAP_BOOL default ABAP_TRUE
+      !IR_TABLE type ref to DATA
+    returning
+      value(RV_BYTES_WRITTEN) type I
+    raising
+      ZCX_EXCEL_HANDLER .
     "! Upload XLSX file
     "! @parameter iv_file_path | Path to the XLSX file
     "! @parameter iv_server | Flag to indicate if file is on application server
     "! @parameter ir_table | Reference to the internal table to store data
     "! @raising zcx_excel_handler | Exception if upload fails
-    METHODS upload_xlsx
-      IMPORTING
-        VALUE(iv_file_path) TYPE string OPTIONAL
-        VALUE(iv_server)    TYPE abap_bool DEFAULT abap_false
-        ir_table            TYPE REF TO data
-      RAISING
-        zcx_excel_handler.
-
+  methods UPLOAD_XLSX
+    importing
+      value(IV_FILE_PATH) type STRING optional
+      value(IV_SERVER) type ABAP_BOOL default ABAP_FALSE
+      !IR_TABLE type ref to DATA
+    raising
+      ZCX_EXCEL_HANDLER .
     "! Download XLSX file
     "! @parameter iv_file_path | Path to save the XLSX file
     "! @parameter iv_server | Flag to indicate if file should be saved on application server
     "! @parameter ir_table | Reference to the internal table with data
     "! @parameter rv_bytes_written | Number of bytes written
     "! @raising zcx_excel_handler | Exception if download fails
-    METHODS download_xlsx
-      IMPORTING
-        VALUE(iv_file_path)     TYPE string OPTIONAL
-        VALUE(iv_server)        TYPE abap_bool DEFAULT abap_false
-        ir_table                TYPE REF TO data
-      RETURNING
-        VALUE(rv_bytes_written) TYPE i
-      RAISING
-        zcx_excel_handler.
-
+  methods DOWNLOAD_XLSX
+    importing
+      value(IV_FILE_PATH) type STRING optional
+      value(IV_SERVER) type ABAP_BOOL default ABAP_FALSE
+      !IR_TABLE type ref to DATA
+    returning
+      value(RV_BYTES_WRITTEN) type I
+    raising
+      ZCX_EXCEL_HANDLER .
   PRIVATE SECTION.
 
     CONSTANTS:
@@ -180,9 +181,15 @@ CLASS zcl_excel_handler DEFINITION PUBLIC FINAL CREATE PUBLIC.
 ENDCLASS.
 
 
-CLASS zcl_excel_handler IMPLEMENTATION.
+CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
 
 
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Public Method ZCL_EXCEL_HANDLER->CONSTRUCTOR
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IV_SEPARATOR                   TYPE        C (default =';')
+* | [!CX!] ZCX_EXCEL_HANDLER
+* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD constructor.
 
     " Validate the column separator for CSV files
@@ -200,6 +207,14 @@ CLASS zcl_excel_handler IMPLEMENTATION.
   ENDMETHOD.
 
 
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Private Method ZCL_EXCEL_HANDLER->CONVERT_LINE_TO_STRUCTURE
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IV_LINE                        TYPE        STRING
+* | [--->] IT_COMPONENTS                  TYPE        CL_ABAP_STRUCTDESCR=>COMPONENT_TABLE
+* | [--->] IR_LINE                        TYPE REF TO DATA
+* | [!CX!] ZCX_EXCEL_HANDLER
+* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD convert_line_to_structure.
 
     DATA:
@@ -280,6 +295,14 @@ CLASS zcl_excel_handler IMPLEMENTATION.
   ENDMETHOD.
 
 
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Private Method ZCL_EXCEL_HANDLER->CONVERT_STRUCTURE_TO_LINE
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IR_STRUCTURE                   TYPE        ANY
+* | [--->] IT_COMPONENTS                  TYPE        CL_ABAP_STRUCTDESCR=>COMPONENT_TABLE
+* | [<-()] RV_LINE                        TYPE        STRING
+* | [!CX!] ZCX_EXCEL_HANDLER
+* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD convert_structure_to_line.
 
     FIELD-SYMBOLS: <fs_component> TYPE any.
@@ -297,18 +320,19 @@ CLASS zcl_excel_handler IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD header_line.
 
-    LOOP AT it_components INTO DATA(ls_component).
-      IF rv_line IS INITIAL.
-        rv_line = ls_component-name.
-      ELSE.
-        rv_line = rv_line && mv_separator && ls_component-name.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Public Method ZCL_EXCEL_HANDLER->DOWNLOAD_CSV
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IV_FILE_PATH                   TYPE        STRING(optional)
+* | [--->] IV_APPEND                      TYPE        ABAP_BOOL (default =ABAP_FALSE)
+* | [--->] IV_CONF_OVERWRITE              TYPE        ABAP_BOOL (default =ABAP_FALSE)
+* | [--->] IV_SERVER                      TYPE        ABAP_BOOL (default =ABAP_FALSE)
+* | [--->] IV_HEADER                      TYPE        ABAP_BOOL (default =ABAP_TRUE)
+* | [--->] IR_TABLE                       TYPE REF TO DATA
+* | [<-()] RV_BYTES_WRITTEN               TYPE        I
+* | [!CX!] ZCX_EXCEL_HANDLER
+* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD download_csv.
 
     DATA: lt_components TYPE cl_abap_structdescr=>component_table,
@@ -329,7 +353,11 @@ CLASS zcl_excel_handler IMPLEMENTATION.
     IF iv_server EQ abap_true.
 
       " Download to server disk
-      OPEN DATASET iv_file_path FOR OUTPUT IN TEXT MODE ENCODING DEFAULT MESSAGE lv_errmsg.
+      IF iv_append EQ abap_true.
+        OPEN DATASET iv_file_path FOR APPENDING IN TEXT MODE ENCODING DEFAULT MESSAGE lv_errmsg.
+      ELSE.
+        OPEN DATASET iv_file_path FOR OUTPUT IN TEXT MODE ENCODING DEFAULT MESSAGE lv_errmsg.
+      ENDIF.
       IF sy-subrc NE 0.
         RAISE EXCEPTION TYPE zcx_excel_handler
           EXPORTING
@@ -337,17 +365,16 @@ CLASS zcl_excel_handler IMPLEMENTATION.
             msgv1  = CONV #( iv_file_path ).
       ENDIF.
 
-      DATA(lv_bytes) = 0.
-      IF iv_header EQ abap_true.
+      IF iv_header EQ abap_true AND iv_append EQ abap_false.
         lv_line = header_line( lt_components ).
-        TRANSFER lv_line TO iv_file_path LENGTH lv_bytes.
-        rv_bytes_written = rv_bytes_written + lv_bytes.
+        TRANSFER lv_line TO iv_file_path.
+        rv_bytes_written = rv_bytes_written + strlen( lv_line ).
       ENDIF.
 
       LOOP AT <fs_table> ASSIGNING <fs_line>.
         lv_line = convert_structure_to_line( ir_structure = <fs_line> it_components = lt_components ).
-        TRANSFER lv_line TO iv_file_path LENGTH lv_bytes.
-        rv_bytes_written = rv_bytes_written + lv_bytes.
+        TRANSFER lv_line TO iv_file_path.
+        rv_bytes_written = rv_bytes_written + strlen( lv_line ).
       ENDLOOP.
 
       CLOSE DATASET iv_file_path.
@@ -359,7 +386,7 @@ CLASS zcl_excel_handler IMPLEMENTATION.
         iv_file_path = get_file( ).
       ENDIF.
 
-      IF iv_header EQ abap_true.
+      IF iv_header EQ abap_true AND iv_append EQ abap_false.
         lv_line = header_line( lt_components ).
         APPEND lv_line TO lt_download.
       ENDIF.
@@ -375,7 +402,8 @@ CLASS zcl_excel_handler IMPLEMENTATION.
         EXPORTING
           filename                  = iv_file_path
           filetype                  = 'ASC'
-          confirm_overwrite         = abap_true
+          append                    = iv_append
+          confirm_overwrite         = iv_conf_overwrite
         IMPORTING
           filelength                = DATA(lv_bytestransferred)
         CHANGING
@@ -420,6 +448,15 @@ CLASS zcl_excel_handler IMPLEMENTATION.
   ENDMETHOD.
 
 
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Public Method ZCL_EXCEL_HANDLER->DOWNLOAD_XLSX
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IV_FILE_PATH                   TYPE        STRING(optional)
+* | [--->] IV_SERVER                      TYPE        ABAP_BOOL (default =ABAP_FALSE)
+* | [--->] IR_TABLE                       TYPE REF TO DATA
+* | [<-()] RV_BYTES_WRITTEN               TYPE        I
+* | [!CX!] ZCX_EXCEL_HANDLER
+* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD download_xlsx.
 
     DATA: lt_components TYPE cl_abap_structdescr=>component_table,
@@ -517,6 +554,12 @@ CLASS zcl_excel_handler IMPLEMENTATION.
   ENDMETHOD.
 
 
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Private Method ZCL_EXCEL_HANDLER->GET_FILE
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IV_XLSX                        TYPE        ABAP_BOOL (default =ABAP_FALSE)
+* | [<-()] RV_FILE                        TYPE        STRING
+* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD get_file.
 
     DATA:
@@ -549,6 +592,12 @@ CLASS zcl_excel_handler IMPLEMENTATION.
   ENDMETHOD.
 
 
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Private Method ZCL_EXCEL_HANDLER->GET_TABLE_STRUCTURE
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IR_TABLE                       TYPE        ANY TABLE
+* | [<-()] RT_COMPONENTS                  TYPE        CL_ABAP_STRUCTDESCR=>COMPONENT_TABLE
+* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD get_table_structure.
 
     mo_table_descr ?= cl_abap_structdescr=>describe_by_data( ir_table ).
@@ -558,6 +607,49 @@ CLASS zcl_excel_handler IMPLEMENTATION.
   ENDMETHOD.
 
 
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Private Method ZCL_EXCEL_HANDLER->HEADER_LINE
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IT_COMPONENTS                  TYPE        CL_ABAP_STRUCTDESCR=>COMPONENT_TABLE
+* | [<-()] RV_LINE                        TYPE        STRING
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD header_line.
+
+    LOOP AT it_components INTO DATA(ls_component).
+      IF rv_line IS INITIAL.
+        rv_line = ls_component-name.
+      ELSE.
+        rv_line = rv_line && mv_separator && ls_component-name.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Private Method ZCL_EXCEL_HANDLER->IS_WINDOWS
+* +-------------------------------------------------------------------------------------------------+
+* | [<-()] RV_RESULT                      TYPE        ABAP_BOOL
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD is_windows.
+
+    DATA lv_subrc TYPE sy-subrc.
+
+    CALL FUNCTION 'HLP_OPERATING_SYSTEM_CHECK'
+      IMPORTING
+        returncode = lv_subrc.
+
+    rv_result = COND #( WHEN lv_subrc EQ 0 THEN abap_true ELSE abap_false ).
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Private Method ZCL_EXCEL_HANDLER->ITAB_TO_XLSX
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IR_DATA_REF                    TYPE REF TO DATA
+* | [<-()] RV_XSTRING                     TYPE        XSTRING
+* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD itab_to_xlsx.
 
     FIELD-SYMBOLS: <fs_data> TYPE ANY TABLE.
@@ -609,6 +701,15 @@ CLASS zcl_excel_handler IMPLEMENTATION.
   ENDMETHOD.
 
 
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Public Method ZCL_EXCEL_HANDLER->UPLOAD_CSV
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IV_FILE_PATH                   TYPE        STRING(optional)
+* | [--->] IV_SERVER                      TYPE        ABAP_BOOL (default =ABAP_FALSE)
+* | [--->] IV_HDR_LINES                   TYPE        I (default =1)
+* | [--->] IR_TABLE                       TYPE REF TO DATA
+* | [!CX!] ZCX_EXCEL_HANDLER
+* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD upload_csv.
 
     DATA:
@@ -709,43 +810,15 @@ CLASS zcl_excel_handler IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD validate_number.
 
-    DATA: lv_number TYPE p DECIMALS 2.
-
-    rv_is_valid = abap_false.
-
-    " Define a regex patterns for the number format with thousands separators and decimals.
-    CONSTANTS:
-      lc_pattern1 TYPE string VALUE '^\d{1,3}(,\d{3})*(\.\d+)?$',       "Comma as thousand's separator
-      lc_pattern2 TYPE string VALUE '^\d{1,3}(.\d{3})*(\,\d+)?$'.       "Period as thousand's separator
-
-    FIND PCRE lc_pattern1 IN cv_number_str.
-    IF sy-subrc EQ 0.
-      " Remove commas (thousands separators) to get a clean number string
-      REPLACE ALL OCCURRENCES OF ',' IN cv_number_str WITH ''.
-    ELSE.
-      FIND PCRE lc_pattern2 IN cv_number_str.
-      IF sy-subrc EQ 0.
-        " Remove periods (thousands separators) to get a clean number string
-        REPLACE ALL OCCURRENCES OF '.' IN cv_number_str WITH ''.
-        TRANSLATE cv_number_str USING ',.'.     "Period as decimal point
-      ENDIF.
-    ENDIF.
-
-
-    " Convert the cleaned string to a packed number
-    TRY.
-        CONDENSE cv_number_str NO-GAPS.
-        lv_number = cv_number_str.
-        rv_is_valid = abap_true.
-      CATCH cx_sy_conversion_error.
-        rv_is_valid = abap_false.
-    ENDTRY.
-
-  ENDMETHOD.
-
-
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Public Method ZCL_EXCEL_HANDLER->UPLOAD_XLSX
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IV_FILE_PATH                   TYPE        STRING(optional)
+* | [--->] IV_SERVER                      TYPE        ABAP_BOOL (default =ABAP_FALSE)
+* | [--->] IR_TABLE                       TYPE REF TO DATA
+* | [!CX!] ZCX_EXCEL_HANDLER
+* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD upload_xlsx.
 
     DATA:
@@ -793,16 +866,46 @@ CLASS zcl_excel_handler IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD is_windows.
 
-    DATA lv_subrc TYPE sy-subrc.
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Private Method ZCL_EXCEL_HANDLER->VALIDATE_NUMBER
+* +-------------------------------------------------------------------------------------------------+
+* | [<-->] CV_NUMBER_STR                  TYPE        STRING
+* | [<-()] RV_IS_VALID                    TYPE        ABAP_BOOL
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD validate_number.
 
-    CALL FUNCTION 'HLP_OPERATING_SYSTEM_CHECK'
-      IMPORTING
-        returncode = lv_subrc.
+    DATA: lv_number TYPE p DECIMALS 2.
 
-    rv_result = COND #( WHEN lv_subrc EQ 0 THEN abap_true ELSE abap_false ).
+    rv_is_valid = abap_false.
+
+    " Define a regex patterns for the number format with thousands separators and decimals.
+    CONSTANTS:
+      lc_pattern1 TYPE string VALUE '^\d{1,3}(,\d{3})*(\.\d+)?$',       "Comma as thousand's separator
+      lc_pattern2 TYPE string VALUE '^\d{1,3}(.\d{3})*(\,\d+)?$'.       "Period as thousand's separator
+
+    FIND REGEX lc_pattern1 IN cv_number_str.
+    IF sy-subrc EQ 0.
+      " Remove commas (thousands separators) to get a clean number string
+      REPLACE ALL OCCURRENCES OF ',' IN cv_number_str WITH ''.
+    ELSE.
+      FIND REGEX lc_pattern2 IN cv_number_str.
+      IF sy-subrc EQ 0.
+        " Remove periods (thousands separators) to get a clean number string
+        REPLACE ALL OCCURRENCES OF '.' IN cv_number_str WITH ''.
+        TRANSLATE cv_number_str USING ',.'.     "Period as decimal point
+      ENDIF.
+    ENDIF.
+
+
+    " Convert the cleaned string to a packed number
+    TRY.
+        CONDENSE cv_number_str NO-GAPS.
+        lv_number = cv_number_str.
+        rv_is_valid = abap_true.
+      CATCH cx_sy_conversion_error.
+        rv_is_valid = abap_false.
+    ENDTRY.
 
   ENDMETHOD.
-
 ENDCLASS.
