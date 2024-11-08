@@ -112,6 +112,17 @@ CLASS zcx_excel_handler DEFINITION
         attr4 TYPE scx_attrname VALUE '',
       END OF not_supported .
 
+      CONSTANTS:
+      "! <p class="shorttext synchronized">You selected data nodes with different structures</p>
+        BEGIN OF different_structure,
+          msgid TYPE symsgid VALUE 'QG_EVAL',
+          msgno TYPE symsgno VALUE '033',
+          attr1 TYPE scx_attrname VALUE '',
+          attr2 TYPE scx_attrname VALUE '',
+          attr3 TYPE scx_attrname VALUE '',
+          attr4 TYPE scx_attrname VALUE '',
+        END OF different_structure .
+      
     "! <p class="shorttext synchronized">First message variable</p>
     DATA msgv1 TYPE msgv1 .
     "! <p class="shorttext synchronized">Second message variable</p>

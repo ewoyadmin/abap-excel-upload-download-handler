@@ -16,6 +16,8 @@ public section.
   methods CONSTRUCTOR
     importing
       value(IV_SEPARATOR) type C default ';'
+      value(IV_LEADING_SIGN) type ABAP_BOOL default ABAP_FALSE
+      value(IV_ALPHA_CONV) type ABAP_BOOL default ABAP_FALSE
     raising
       ZCX_EXCEL_HANDLER .
     "! Upload CSV file
@@ -78,10 +80,18 @@ public section.
       value(RV_BYTES_WRITTEN) type I
     raising
       ZCX_EXCEL_HANDLER .
-  PRIVATE SECTION.
+  class-methods GET_FILE
+    importing
+      !IV_XLSX type ABAP_BOOL default ABAP_FALSE
+    returning
+      value(RV_FILE) type STRING .
+private section.
 
-    CONSTANTS:
-      BEGIN OF mc,
+  types:
+    tt_text_data TYPE STANDARD TABLE OF text4096 .
+
+  constants:
+    BEGIN OF mc,
         BEGIN OF msgty,
           success TYPE msgty VALUE 'S',
           error   TYPE msgty VALUE 'E',
@@ -90,95 +100,79 @@ public section.
           abend   TYPE msgty VALUE 'A',
         END OF msgty,
         is_numeric TYPE char11 VALUE '1234567890 ',
-      END OF mc.
-
-    TYPES: tt_text_data TYPE STANDARD TABLE OF text4096.
-
-    DATA:
-      mv_separator    TYPE c,
-      mv_use_excel    TYPE abap_bool,
-      mo_table_descr  TYPE REF TO cl_abap_tabledescr,
-      mo_struct_descr TYPE REF TO cl_abap_structdescr.
-
-    "! Get file path through file dialog
-    "! @parameter iv_xlsx | Flag to indicate if file is XLSX
-    "! @parameter rv_file | Selected file path
-    METHODS get_file
-      IMPORTING
-        iv_xlsx        TYPE abap_bool DEFAULT abap_false
-      RETURNING
-        VALUE(rv_file) TYPE string.
+        alpha      TYPE convexit VALUE 'ALPHA',
+      END OF mc .
+  data MV_SEPARATOR type C .
+  data MV_LEADING_SIGN type ABAP_BOOL .
+  data MV_ALPHA_CONV type ABAP_BOOL .
+  data MV_USE_EXCEL type ABAP_BOOL .
+  data MO_TABLE_DESCR type ref to CL_ABAP_TABLEDESCR .
+  data MO_STRUCT_DESCR type ref to CL_ABAP_STRUCTDESCR .
 
     "! Get table structure
     "! @parameter ir_table | Reference to the internal table
     "! @parameter rt_components | Table of structure components
-    METHODS get_table_structure
-      IMPORTING
-        ir_table             TYPE ANY TABLE
-      RETURNING
-        VALUE(rt_components) TYPE cl_abap_structdescr=>component_table.
-
+  methods GET_TABLE_STRUCTURE
+    importing
+      !IR_TABLE type ANY TABLE
+    returning
+      value(RT_COMPONENTS) type CL_ABAP_STRUCTDESCR=>COMPONENT_TABLE .
     "! Convert line to structure
     "! @parameter iv_line | Input line
     "! @parameter it_components | Table of structure components
     "! @parameter ir_line | Reference to the structure
     "! @raising zcx_excel_handler | Exception if conversion fails
-    METHODS convert_line_to_structure
-      IMPORTING
-        VALUE(iv_line)       TYPE string
-        VALUE(it_components) TYPE cl_abap_structdescr=>component_table
-        ir_line              TYPE REF TO data
-      RAISING
-        zcx_excel_handler.
-
+  methods CONVERT_LINE_TO_STRUCTURE
+    importing
+      value(IV_LINE) type STRING
+      value(IT_COMPONENTS) type CL_ABAP_STRUCTDESCR=>COMPONENT_TABLE
+      !IR_LINE type ref to DATA
+    raising
+      ZCX_EXCEL_HANDLER .
     "! Convert structure to line
     "! @parameter ir_structure | Reference to the structure
     "! @parameter it_components | Table of structure components
     "! @parameter rv_line | Resulting line
     "! @raising zcx_excel_handler | Exception if conversion fails
-    METHODS convert_structure_to_line
-      IMPORTING
-        ir_structure         TYPE any
-        VALUE(it_components) TYPE cl_abap_structdescr=>component_table
-      RETURNING
-        VALUE(rv_line)       TYPE string
-      RAISING
-        zcx_excel_handler.
-
+  methods CONVERT_STRUCTURE_TO_LINE
+    importing
+      !IR_STRUCTURE type ANY
+      value(IT_COMPONENTS) type CL_ABAP_STRUCTDESCR=>COMPONENT_TABLE
+    returning
+      value(RV_LINE) type STRING
+    raising
+      ZCX_EXCEL_HANDLER .
     "! Convert internal table to XLSX format
     "! @parameter ir_data_ref | Reference to the internal table
     "! @parameter rv_xstring | Resulting XLSX data as XSTRING
-    METHODS itab_to_xlsx
-      IMPORTING
-        ir_data_ref       TYPE REF TO data
-      RETURNING
-        VALUE(rv_xstring) TYPE xstring.
-
+  methods ITAB_TO_XLSX
+    importing
+      !IR_DATA_REF type ref to DATA
+    returning
+      value(RV_XSTRING) type XSTRING .
     "! Validate number string
     "! @parameter cv_number_str | Number string to validate
     "! @parameter rv_is_valid | Flag indicating if number is valid
-    METHODS validate_number
-      CHANGING
-        cv_number_str      TYPE string
-      RETURNING
-        VALUE(rv_is_valid) TYPE abap_bool.
-
+  methods VALIDATE_NUMBER
+    changing
+      !CV_NUMBER_STR type STRING
+    returning
+      value(RV_IS_VALID) type ABAP_BOOL .
     "! Check if running on Windows
     "! @parameter rv_result | True if running on Windows
-    METHODS is_windows
-      RETURNING
-        VALUE(rv_result) TYPE abap_bool.
-
+  methods IS_WINDOWS
+    returning
+      value(RV_RESULT) type ABAP_BOOL .
     "! Generate header line
     "! @parameter it_components | Table of structure components
     "! @parameter rv_line | Resulting header line
-    METHODS header_line
-      IMPORTING
-        VALUE(it_components) TYPE cl_abap_structdescr=>component_table
-      RETURNING
-        VALUE(rv_line)       TYPE string.
-
+  methods HEADER_LINE
+    importing
+      value(IT_COMPONENTS) type CL_ABAP_STRUCTDESCR=>COMPONENT_TABLE
+    returning
+      value(RV_LINE) type STRING .
 ENDCLASS.
+
 
 
 CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
@@ -188,6 +182,8 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
 * | Instance Public Method ZCL_EXCEL_HANDLER->CONSTRUCTOR
 * +-------------------------------------------------------------------------------------------------+
 * | [--->] IV_SEPARATOR                   TYPE        C (default =';')
+* | [--->] IV_LEADING_SIGN                TYPE        ABAP_BOOL (default =ABAP_FALSE)
+* | [--->] IV_ALPHA_CONV                  TYPE        ABAP_BOOL (default =ABAP_FALSE)
 * | [!CX!] ZCX_EXCEL_HANDLER
 * +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD constructor.
@@ -203,6 +199,10 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
           EXPORTING
             textid = zcx_excel_handler=>invalid_delimiter.
     ENDCASE.
+
+    mv_leading_sign = iv_leading_sign.
+
+    mv_alpha_conv = iv_alpha_conv.
 
   ENDMETHOD.
 
@@ -234,13 +234,20 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
 
     " Raise exception if separator is found in column's value
     IF lines( it_components ) NE lines( lt_values ).
-      RAISE EXCEPTION TYPE zcx_excel_handler
+      IF lt_values[] IS INITIAL.
+        RAISE EXCEPTION TYPE zcx_excel_handler
           EXPORTING
             textid = zcx_excel_handler=>invalid_delimiter.
+      ELSE.
+        RAISE EXCEPTION TYPE zcx_excel_handler
+          EXPORTING
+            textid = zcx_excel_handler=>different_structure.
+      ENDIF.
     ENDIF.
 
     LOOP AT it_components INTO DATA(ls_component).
       lv_value = VALUE #( lt_values[ sy-tabix ] OPTIONAL ).
+      SHIFT lv_value LEFT DELETING LEADING space.
       ASSIGN COMPONENT ls_component-name OF STRUCTURE <fs_line> TO <fs_value>.
       IF sy-subrc EQ 0.
         DESCRIBE FIELD <fs_value> TYPE DATA(lv_type).
@@ -274,6 +281,18 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
                   textid = zcx_excel_handler=>invalid_date
                   msgv1  = CONV #( lv_value ).
             ENDIF.
+          WHEN 'C'.
+            " Convert to internal format when ALPHA conversion exists
+            DATA(lt_ddic) = ls_component-type->get_ddic_object( ).
+            IF VALUE #( lt_ddic[ 1 ]-convexit OPTIONAL ) EQ mc-alpha.
+              CREATE DATA lv_data TYPE HANDLE ls_component-type.
+              ASSIGN lv_data->* TO FIELD-SYMBOL(<fs_data>).
+              IF <fs_data> IS ASSIGNED.
+                <fs_data> = lv_value.
+                <fs_data> = |{ <fs_data> ALPHA = IN }|.
+                lv_value = <fs_data>.
+              ENDIF.
+            ENDIF.
         ENDCASE.
         TRY.
             <fs_value> = lv_value.
@@ -305,11 +324,41 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
 * +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD convert_structure_to_line.
 
+    DATA:
+      lv_numstr TYPE char20,
+      lv_data   TYPE REF TO data,
+      lo_descr  TYPE REF TO cl_abap_datadescr.
+
     FIELD-SYMBOLS: <fs_component> TYPE any.
 
     LOOP AT it_components INTO DATA(ls_component).
       ASSIGN COMPONENT ls_component-name OF STRUCTURE ir_structure TO <fs_component>.
       IF sy-subrc EQ 0.
+        DESCRIBE FIELD <fs_component> TYPE DATA(lv_type).
+        " Handle leading sign when requested
+        IF mv_leading_sign EQ abap_true.
+          IF ( lv_type EQ cl_abap_datadescr=>typekind_int OR
+               lv_type EQ cl_abap_datadescr=>typekind_packed ) AND
+             <fs_component> LT 0.
+            lv_numstr = <fs_component>.
+            TRANSLATE lv_numstr USING '- '.
+            CONDENSE lv_numstr NO-GAPS.
+            lv_numstr = |-{ lv_numstr }|.
+            ASSIGN lv_numstr TO <fs_component>.
+          ENDIF.
+        ENDIF.
+        " Remove leading zeroes when requested
+        IF mv_alpha_conv EQ abap_true AND lv_type EQ cl_abap_datadescr=>typekind_char.
+          DATA(lt_ddic) = ls_component-type->get_ddic_object( ).
+          IF VALUE #( lt_ddic[ 1 ]-convexit OPTIONAL ) EQ mc-alpha.
+            CREATE DATA lv_data TYPE HANDLE ls_component-type.
+            ASSIGN lv_data->* TO FIELD-SYMBOL(<fs_data>).
+            IF <fs_data> IS ASSIGNED.
+              <fs_data> = |{ <fs_component> ALPHA = OUT }|.
+              ASSIGN <fs_data> TO <fs_component>.
+            ENDIF.
+          ENDIF.
+        ENDIF.
         IF rv_line IS INITIAL.
           rv_line = <fs_component>.
         ELSE.
@@ -555,7 +604,7 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
 
 
 * <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Private Method ZCL_EXCEL_HANDLER->GET_FILE
+* | Static Public Method ZCL_EXCEL_HANDLER=>GET_FILE
 * +-------------------------------------------------------------------------------------------------+
 * | [--->] IV_XLSX                        TYPE        ABAP_BOOL (default =ABAP_FALSE)
 * | [<-()] RV_FILE                        TYPE        STRING
@@ -568,11 +617,11 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
 
     IF iv_xlsx EQ abap_true.
       DATA(title)            = |Select Excel File, e.g. *.xlsx|.
-      DATA(defaultextension) = |.xlsx|.
+      DATA(defaultextension) = |xlsx|.
       DATA(filefilter)       = `Excel Files (*.xlsx)|*.xlsx`.
     ELSE.
       title            = |Select CSV File, e.g. *.csv|.
-      defaultextension = |.csv|.
+      defaultextension = |csv|.
       filefilter       = `Excel Files (*.csv)|*.csv`.
     ENDIF.
 
@@ -716,15 +765,14 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
       lv_line           TYPE string,
       lt_components     TYPE cl_abap_structdescr=>component_table,
       lv_num_of_records TYPE i,
-      lo_struct_descr   TYPE REF TO cl_abap_structdescr,
       lr_table          TYPE REF TO data,
       lt_upload         TYPE STANDARD TABLE OF string,
-      lv_errmsg         TYPE bapi_msg.
+      lv_errmsg         TYPE bapi_msg,
+      lv_data           TYPE REF TO data.
 
     FIELD-SYMBOLS:
       <fs_table> TYPE STANDARD TABLE,
       <fs_line>  TYPE any.
-
 
     ASSIGN ir_table->* TO <fs_table>.
     REFRESH <fs_table>.
@@ -875,14 +923,34 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
 * +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD validate_number.
 
-    DATA: lv_number TYPE p DECIMALS 2.
-
-    rv_is_valid = abap_false.
-
     " Define a regex patterns for the number format with thousands separators and decimals.
     CONSTANTS:
       lc_pattern1 TYPE string VALUE '^\d{1,3}(,\d{3})*(\.\d+)?$',       "Comma as thousand's separator
-      lc_pattern2 TYPE string VALUE '^\d{1,3}(.\d{3})*(\,\d+)?$'.       "Period as thousand's separator
+      lc_pattern2 TYPE string VALUE '^\d{1,3}(.\d{3})*(\,\d+)?$',       "Period as thousand's separator
+      lc_sign     TYPE c VALUE '-'.
+
+    DATA:
+      lv_number TYPE p DECIMALS 2,
+      lv_str    TYPE char20,
+      lv_offset TYPE i,
+      lv_sign   TYPE c.
+
+    rv_is_valid = abap_false.
+
+    " Handle leading or trailing sign
+    lv_str = cv_number_str.
+    SHIFT lv_str LEFT DELETING LEADING space.
+    lv_offset = strlen( lv_str ) - 1.
+    IF lv_offset GT 0.
+      IF lv_str(1) EQ lc_sign.
+        lv_sign = lc_sign.
+        SHIFT lv_str LEFT.      "Remove sign for regex
+      ELSEIF lv_str+lv_offset(1) EQ lc_sign.
+        lv_sign = lc_sign.
+        CLEAR lv_str+lv_offset. "Remove sign for regex
+      ENDIF.
+      cv_number_str = lv_str.
+    ENDIF.
 
     FIND REGEX lc_pattern1 IN cv_number_str.
     IF sy-subrc EQ 0.
@@ -897,6 +965,10 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+    IF lv_sign EQ lc_sign.
+      "Restore the sign
+      cv_number_str = |{ cv_number_str }{ lv_sign }|.
+    ENDIF.
 
     " Convert the cleaned string to a packed number
     TRY.
