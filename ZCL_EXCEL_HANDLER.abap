@@ -230,10 +230,13 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
 
     ASSIGN ir_line->* TO <fs_line>.
 
+    FIND ALL OCCURRENCES OF mv_separator IN iv_line MATCH COUNT DATA(lv_fld_cnt).
+    lv_fld_cnt = lv_fld_cnt + 1.
+
     SPLIT iv_line AT mv_separator INTO TABLE lt_values.
 
     " Raise exception if separator is found in column's value
-    IF lines( it_components ) NE lines( lt_values ).
+    IF lines( it_components ) NE lv_fld_cnt.
       IF lt_values[] IS INITIAL.
         RAISE EXCEPTION TYPE zcx_excel_handler
           EXPORTING
