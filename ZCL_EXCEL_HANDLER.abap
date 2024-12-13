@@ -261,28 +261,30 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
             ENDIF.
 
           WHEN 'D'.   "Date
-            DO 6 TIMES.
-              lv_datfm = sy-index.
-              TRY.
-                  cl_abap_datfm=>conv_date_ext_to_int(
-                    EXPORTING
-                      im_datext    = lv_value
-                      im_datfmdes  = lv_datfm
-                    IMPORTING
-                      ex_datint    = DATA(lv_date)
-                  ).
-                CATCH cx_root.
-                  CLEAR lv_date.
-                  CONTINUE.   "Try all formats
-              ENDTRY.
-              lv_value = lv_date.
-              EXIT.
-            ENDDO.
-            IF lv_date IS INITIAL.
-              RAISE EXCEPTION TYPE zcx_excel_handler
-                EXPORTING
-                  textid = zcx_excel_handler=>invalid_date
-                  msgv1  = CONV #( lv_value ).
+            IF lv_value CN ' 0'.
+              DO 6 TIMES.
+                lv_datfm = sy-index.
+                TRY.
+                    cl_abap_datfm=>conv_date_ext_to_int(
+                      EXPORTING
+                        im_datext    = lv_value
+                        im_datfmdes  = lv_datfm
+                      IMPORTING
+                        ex_datint    = DATA(lv_date)
+                    ).
+                  CATCH cx_root.
+                    CLEAR lv_date.
+                    CONTINUE.   "Try all formats
+                ENDTRY.
+                lv_value = lv_date.
+                EXIT.
+              ENDDO.
+              IF lv_date IS INITIAL.
+                RAISE EXCEPTION TYPE zcx_excel_handler
+                  EXPORTING
+                    textid = zcx_excel_handler=>invalid_date
+                    msgv1  = CONV #( lv_value ).
+              ENDIF.
             ENDIF.
           WHEN 'C'.
             " Convert to internal format when ALPHA conversion exists
