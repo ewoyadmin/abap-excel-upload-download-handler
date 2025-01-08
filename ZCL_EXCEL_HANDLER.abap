@@ -657,6 +657,9 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
     mo_table_descr ?= cl_abap_structdescr=>describe_by_data( ir_table ).
     mo_struct_descr ?= mo_table_descr->get_table_line_type( ).
     rt_components = mo_struct_descr->get_components( ).
+    IF line_exists( rt_components[ as_include = abap_true ] ).
+      rt_components = CORRESPONDING #( mo_struct_descr->get_included_view( ) ).
+    ENDIF.
 
   ENDMETHOD.
 
