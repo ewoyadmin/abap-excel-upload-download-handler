@@ -157,7 +157,9 @@ private section.
     changing
       !CV_NUMBER_STR type STRING
     returning
-      value(RV_IS_VALID) type ABAP_BOOL .
+      value(RV_IS_VALID) type ABAP_BOOL 
+    raising
+      ZCX_EXCEL_HANDLER .
     "! Check if running on Windows
     "! @parameter rv_result | True if running on Windows
   methods IS_WINDOWS
@@ -933,8 +935,9 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
 
     " Define a regex patterns for the number format with thousands separators and decimals.
     CONSTANTS:
-      lc_pattern1 TYPE string VALUE '^\d{1,3}(,\d{3})*(\.\d+)?$',       "Comma as thousand's separator
-      lc_pattern2 TYPE string VALUE '^\d{1,3}(.\d{3})*(\,\d+)?$',       "Period as thousand's separator
+      lc_pattern1 TYPE string VALUE '^\s*-?\s*(?:\d{1,3}(?:(,?)\d{3})?(?:\1\d{3})*(\.\d*)?|.\d+)\s*$',      " 1,234,567.89   
+      lc_pattern2 TYPE string VALUE '^\s*-?\s*(?:\d{1,3}(?:(.?)\d{3})?(?:\1\d{3})*(,\d*)?|,\d+)\s*$',       " 1.234.567,89
+      lc_pattern3 TYPE string VALUE '^\s*-?\s*(?:\d{1,3}(?:(\ ?)\d{3})?(?:\1\d{3})*(,\d*)?|,\d+)\s*$',      " 1 234 567,89
       lc_sign     TYPE c VALUE '-'.
 
     DATA:
@@ -960,16 +963,29 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
       cv_number_str = lv_str.
     ENDIF.
 
-    FIND REGEX lc_pattern1 IN cv_number_str.
+    FIND REGEX lc_pattern1 IN cv_number_str.  " 1,234,567.89
     IF sy-subrc EQ 0.
       " Remove commas (thousands separators) to get a clean number string
       REPLACE ALL OCCURRENCES OF ',' IN cv_number_str WITH ''.
     ELSE.
-      FIND REGEX lc_pattern2 IN cv_number_str.
+      FIND REGEX lc_pattern2 IN cv_number_str.  " 1.234.567,89
       IF sy-subrc EQ 0.
         " Remove periods (thousands separators) to get a clean number string
         REPLACE ALL OCCURRENCES OF '.' IN cv_number_str WITH ''.
         TRANSLATE cv_number_str USING ',.'.     "Period as decimal point
+      ELSE.
+        FIND REGEX lc_pattern3 IN cv_number_str.  " 1 234 567,89
+        IF sy-subrc EQ 0.
+          " Remove space (thousands separators) to get a clean number string
+          CONDENSE cv_number_str NO-GAPS.
+          TRANSLATE cv_number_str USING ',.'.     "Period as decimal point
+        ELSE.
+          " Not a valid number format
+          RAISE EXCEPTION TYPE zcx_excel_handler
+          EXPORTING
+            textid = zcx_excel_handler=>conversion_failed
+            msgv1  = CONV #( cv_number_str ).
+        ENDIF.
       ENDIF.
     ENDIF.
 
@@ -988,4 +1004,5 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+  
 ENDCLASS.
