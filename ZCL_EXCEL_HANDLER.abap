@@ -961,37 +961,37 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
         CLEAR lv_str+lv_offset. "Remove sign for regex
       ENDIF.
       cv_number_str = lv_str.
-    ENDIF.
 
-    FIND REGEX lc_pattern1 IN cv_number_str.  " 1,234,567.89
-    IF sy-subrc EQ 0.
-      " Remove commas (thousands separators) to get a clean number string
-      REPLACE ALL OCCURRENCES OF ',' IN cv_number_str WITH ''.
-    ELSE.
-      FIND REGEX lc_pattern2 IN cv_number_str.  " 1.234.567,89
+      FIND REGEX lc_pattern1 IN cv_number_str.  " 1,234,567.89
       IF sy-subrc EQ 0.
-        " Remove periods (thousands separators) to get a clean number string
-        REPLACE ALL OCCURRENCES OF '.' IN cv_number_str WITH ''.
-        TRANSLATE cv_number_str USING ',.'.     "Period as decimal point
+        " Remove commas (thousands separators) to get a clean number string
+        REPLACE ALL OCCURRENCES OF ',' IN cv_number_str WITH ''.
       ELSE.
-        FIND REGEX lc_pattern3 IN cv_number_str.  " 1 234 567,89
+        FIND REGEX lc_pattern2 IN cv_number_str.  " 1.234.567,89
         IF sy-subrc EQ 0.
-          " Remove space (thousands separators) to get a clean number string
-          CONDENSE cv_number_str NO-GAPS.
+          " Remove periods (thousands separators) to get a clean number string
+          REPLACE ALL OCCURRENCES OF '.' IN cv_number_str WITH ''.
           TRANSLATE cv_number_str USING ',.'.     "Period as decimal point
         ELSE.
-          " Not a valid number format
-          RAISE EXCEPTION TYPE zcx_excel_handler
-          EXPORTING
-            textid = zcx_excel_handler=>conversion_failed
-            msgv1  = CONV #( cv_number_str ).
+          FIND REGEX lc_pattern3 IN cv_number_str.  " 1 234 567,89
+          IF sy-subrc EQ 0.
+            " Remove space (thousands separators) to get a clean number string
+            CONDENSE cv_number_str NO-GAPS.
+            TRANSLATE cv_number_str USING ',.'.     "Period as decimal point
+          ELSE.
+            " Not a valid number format
+            RAISE EXCEPTION TYPE zcx_excel_handler
+            EXPORTING
+              textid = zcx_excel_handler=>conversion_failed
+              msgv1  = CONV #( cv_number_str ).
+          ENDIF.
         ENDIF.
       ENDIF.
-    ENDIF.
 
-    IF lv_sign EQ lc_sign.
-      "Restore the sign
-      cv_number_str = |{ cv_number_str }{ lv_sign }|.
+      IF lv_sign EQ lc_sign.
+        "Restore the sign
+        cv_number_str = |{ cv_number_str }{ lv_sign }|.
+      ENDIF.
     ENDIF.
 
     " Convert the cleaned string to a packed number
