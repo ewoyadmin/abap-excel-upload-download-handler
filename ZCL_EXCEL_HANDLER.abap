@@ -173,6 +173,11 @@ private section.
       value(IT_COMPONENTS) type CL_ABAP_STRUCTDESCR=>COMPONENT_TABLE
     returning
       value(RV_LINE) type STRING .
+
+  METHODS internal_format
+    IMPORTING
+      !ir_data_ref TYPE REF TO data.
+
 ENDCLASS.
 
 
@@ -281,7 +286,10 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
                 lv_value = lv_date.
                 EXIT.
               ENDDO.
-              IF lv_date IS INITIAL.
+              " Valid date should be 8 digits internal format
+              TRANSLATE lv_value USING '. - / '.
+              CONDENSE lv_value NO-GAPS.
+              IF lv_date IS INITIAL AND lv_value CN ' 0'.   "Invalid characters
                 RAISE EXCEPTION TYPE zcx_excel_handler
                   EXPORTING
                     textid = zcx_excel_handler=>invalid_date
@@ -915,7 +923,9 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
       EXCEPTIONS
         conversion_failed    = 1
         OTHERS               = 2.
-    IF sy-subrc NE 0.
+    IF sy-subrc EQ 0.
+      internal_format( ir_table ).
+    ELSE.
       RAISE EXCEPTION TYPE zcx_excel_handler
         EXPORTING
           textid = zcx_excel_handler=>conversion_failed
@@ -1004,5 +1014,56 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-  
+
+  METHOD internal_format.
+
+    DATA:
+      lo_table_descr  TYPE REF TO cl_abap_tabledescr,
+      lo_struct_descr TYPE REF TO cl_abap_structdescr,
+      lt_components   TYPE cl_abap_structdescr=>component_table,
+      lv_data         TYPE REF TO data.
+
+    FIELD-SYMBOLS:
+      <ft_data>  TYPE ANY TABLE,
+      <fs_line>  TYPE any,
+      <fs_value> TYPE any.
+
+    ASSIGN ir_data_ref->* TO <ft_data>.
+
+    lo_table_descr  ?= cl_abap_structdescr=>describe_by_data( <ft_data> ).
+    lo_struct_descr ?= lo_table_descr->get_table_line_type( ).
+    lt_components = lo_struct_descr->get_components( ).
+
+    LOOP AT <ft_data> ASSIGNING <fs_line>.
+      IF sy-subrc EQ 0.
+        " Make sure all fields with conversion exit APIHA are in internal format
+        LOOP AT lt_components INTO DATA(ls_component).
+          ASSIGN COMPONENT ls_component-name OF STRUCTURE <fs_line> TO <fs_value>.
+          IF sy-subrc EQ 0.
+            DESCRIBE FIELD <fs_value> TYPE DATA(lv_type).
+            CASE lv_type.
+              WHEN 'C'.
+                " Convert to internal format when ALPHA conversion exists
+                DATA(lt_ddic) = ls_component-type->get_ddic_object( ).
+                IF VALUE #( lt_ddic[ 1 ]-convexit OPTIONAL ) EQ 'ALPHA'.
+                  CREATE DATA lv_data TYPE HANDLE ls_component-type.
+                  ASSIGN lv_data TO FIELD-SYMBOL(<fs_data>).
+                  IF <fs_data> IS ASSIGNED.
+                    <fs_data> = <fs_value>.
+                    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+                      EXPORTING
+                        input  = <fs_data>
+                      IMPORTING
+                        output = <fs_data>.
+                    <fs_value> = <fs_data>.
+                  ENDIF.
+                ENDIF.
+            ENDCASE.
+          ENDIF.
+        ENDLOOP.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.
