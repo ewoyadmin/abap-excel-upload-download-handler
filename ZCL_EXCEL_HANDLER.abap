@@ -3,37 +3,37 @@
 "! This class supports XLSX and CSV file formats for uploading and downloading data
 "! from/to SAP from/to PC and application server.
 "! </p>
-class ZCL_EXCEL_HANDLER definition
-  public
-  final
-  create public .
+CLASS zcl_excel_handler DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
     "! Constructor
     "! @parameter iv_separator | Column separator for CSV files (default is semicolon)
     "! @raising zcx_excel_handler | Exception if invalid separator is provided
-  methods CONSTRUCTOR
-    importing
-      value(IV_SEPARATOR) type C default ';'
-      value(IV_LEADING_SIGN) type ABAP_BOOL default ABAP_FALSE
-      value(IV_ALPHA_CONV) type ABAP_BOOL default ABAP_FALSE
-    raising
-      ZCX_EXCEL_HANDLER .
+    METHODS constructor
+      IMPORTING
+        VALUE(iv_separator)    TYPE c DEFAULT ';'
+        VALUE(iv_leading_sign) TYPE abap_bool DEFAULT abap_false
+        VALUE(iv_alpha_conv)   TYPE abap_bool DEFAULT abap_false
+      RAISING
+        zcx_excel_handler .
     "! Upload CSV file
     "! @parameter iv_file_path | Path to the CSV file
     "! @parameter iv_server | Flag to indicate if file is on application server
     "! @parameter iv_hdr_lines | Number of header lines to skip
     "! @parameter ir_table | Reference to the internal table to store data
     "! @raising zcx_excel_handler | Exception if upload fails
-  methods UPLOAD_CSV
-    importing
-      value(IV_FILE_PATH) type STRING optional
-      value(IV_SERVER) type ABAP_BOOL default ABAP_FALSE
-      value(IV_HDR_LINES) type I default 1
-      !IR_TABLE type ref to DATA
-    raising
-      ZCX_EXCEL_HANDLER .
+    METHODS upload_csv
+      IMPORTING
+        VALUE(iv_file_path) TYPE string OPTIONAL
+        VALUE(iv_server)    TYPE abap_bool DEFAULT abap_false
+        VALUE(iv_hdr_lines) TYPE i DEFAULT 1
+        !ir_table           TYPE REF TO data
+      RAISING
+        zcx_excel_handler .
     "! Download CSV file
     "! @parameter iv_file_path | Path to save the CSV file
     "! @parameter iv_server | Flag to indicate if file should be saved on application server
@@ -41,57 +41,58 @@ public section.
     "! @parameter ir_table | Reference to the internal table with data
     "! @parameter rv_bytes_written | Number of bytes written
     "! @raising zcx_excel_handler | Exception if download fails
-  methods DOWNLOAD_CSV
-    importing
-      value(IV_FILE_PATH) type STRING optional
-      value(IV_APPEND) type ABAP_BOOL default ABAP_FALSE
-      value(IV_CONF_OVERWRITE) type ABAP_BOOL default ABAP_FALSE
-      value(IV_SERVER) type ABAP_BOOL default ABAP_FALSE
-      value(IV_HEADER) type ABAP_BOOL default ABAP_TRUE
-      !IR_TABLE type ref to DATA
-    returning
-      value(RV_BYTES_WRITTEN) type I
-    raising
-      ZCX_EXCEL_HANDLER .
+    METHODS download_csv
+      IMPORTING
+        VALUE(iv_file_path)      TYPE string OPTIONAL
+        VALUE(iv_append)         TYPE abap_bool DEFAULT abap_false
+        VALUE(iv_conf_overwrite) TYPE abap_bool DEFAULT abap_false
+        VALUE(iv_server)         TYPE abap_bool DEFAULT abap_false
+        VALUE(iv_header)         TYPE abap_bool DEFAULT abap_true
+        !ir_table                TYPE REF TO data
+      RETURNING
+        VALUE(rv_bytes_written)  TYPE i
+      RAISING
+        zcx_excel_handler .
     "! Upload XLSX file
     "! @parameter iv_file_path | Path to the XLSX file
     "! @parameter iv_server | Flag to indicate if file is on application server
     "! @parameter ir_table | Reference to the internal table to store data
     "! @raising zcx_excel_handler | Exception if upload fails
-  methods UPLOAD_XLSX
-    importing
-      value(IV_FILE_PATH) type STRING optional
-      value(IV_SERVER) type ABAP_BOOL default ABAP_FALSE
-      !IR_TABLE type ref to DATA
-    raising
-      ZCX_EXCEL_HANDLER .
+    METHODS upload_xlsx
+      IMPORTING
+        VALUE(iv_file_path) TYPE string OPTIONAL
+        VALUE(iv_server)    TYPE abap_bool DEFAULT abap_false
+        VALUE(iv_hdr_lines) TYPE i DEFAULT 1
+        !ir_table           TYPE REF TO data
+      RAISING
+        zcx_excel_handler .
     "! Download XLSX file
     "! @parameter iv_file_path | Path to save the XLSX file
     "! @parameter iv_server | Flag to indicate if file should be saved on application server
     "! @parameter ir_table | Reference to the internal table with data
     "! @parameter rv_bytes_written | Number of bytes written
     "! @raising zcx_excel_handler | Exception if download fails
-  methods DOWNLOAD_XLSX
-    importing
-      value(IV_FILE_PATH) type STRING optional
-      value(IV_SERVER) type ABAP_BOOL default ABAP_FALSE
-      !IR_TABLE type ref to DATA
-    returning
-      value(RV_BYTES_WRITTEN) type I
-    raising
-      ZCX_EXCEL_HANDLER .
-  class-methods GET_FILE
-    importing
-      !IV_XLSX type ABAP_BOOL default ABAP_FALSE
-    returning
-      value(RV_FILE) type STRING .
-private section.
+    METHODS download_xlsx
+      IMPORTING
+        VALUE(iv_file_path)     TYPE string OPTIONAL
+        VALUE(iv_server)        TYPE abap_bool DEFAULT abap_false
+        !ir_table               TYPE REF TO data
+      RETURNING
+        VALUE(rv_bytes_written) TYPE i
+      RAISING
+        zcx_excel_handler .
+    CLASS-METHODS get_file
+      IMPORTING
+        !iv_xlsx       TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(rv_file) TYPE string .
+  PRIVATE SECTION.
 
-  types:
-    tt_text_data TYPE STANDARD TABLE OF text4096 .
+    TYPES:
+      tt_text_data TYPE STANDARD TABLE OF text4096 .
 
-  constants:
-    BEGIN OF mc,
+    CONSTANTS:
+      BEGIN OF mc,
         BEGIN OF msgty,
           success TYPE msgty VALUE 'S',
           error   TYPE msgty VALUE 'E',
@@ -102,87 +103,78 @@ private section.
         is_numeric TYPE char11 VALUE '1234567890 ',
         alpha      TYPE convexit VALUE 'ALPHA',
       END OF mc .
-  data MV_SEPARATOR type C .
-  data MV_LEADING_SIGN type ABAP_BOOL .
-  data MV_ALPHA_CONV type ABAP_BOOL .
-  data MV_USE_EXCEL type ABAP_BOOL .
-  data MO_TABLE_DESCR type ref to CL_ABAP_TABLEDESCR .
-  data MO_STRUCT_DESCR type ref to CL_ABAP_STRUCTDESCR .
+    DATA mv_separator TYPE c .
+    DATA mv_leading_sign TYPE abap_bool .
+    DATA mv_alpha_conv TYPE abap_bool .
+    DATA mv_use_excel TYPE abap_bool .
+    DATA mo_table_descr TYPE REF TO cl_abap_tabledescr .
+    DATA mo_struct_descr TYPE REF TO cl_abap_structdescr .
 
     "! Get table structure
     "! @parameter ir_table | Reference to the internal table
     "! @parameter rt_components | Table of structure components
-  methods GET_TABLE_STRUCTURE
-    importing
-      !IR_TABLE type ANY TABLE
-    returning
-      value(RT_COMPONENTS) type CL_ABAP_STRUCTDESCR=>COMPONENT_TABLE .
+    METHODS get_table_structure
+      IMPORTING
+        !ir_table            TYPE ANY TABLE
+      RETURNING
+        VALUE(rt_components) TYPE cl_abap_structdescr=>component_table .
     "! Convert line to structure
     "! @parameter iv_line | Input line
     "! @parameter it_components | Table of structure components
     "! @parameter ir_line | Reference to the structure
     "! @raising zcx_excel_handler | Exception if conversion fails
-  methods CONVERT_LINE_TO_STRUCTURE
-    importing
-      value(IV_LINE) type STRING
-      value(IT_COMPONENTS) type CL_ABAP_STRUCTDESCR=>COMPONENT_TABLE
-      !IR_LINE type ref to DATA
-    raising
-      ZCX_EXCEL_HANDLER .
+    METHODS convert_line_to_structure
+      IMPORTING
+        VALUE(iv_line)       TYPE string
+        VALUE(it_components) TYPE cl_abap_structdescr=>component_table
+        !ir_line             TYPE REF TO data
+      RAISING
+        zcx_excel_handler .
     "! Convert structure to line
     "! @parameter ir_structure | Reference to the structure
     "! @parameter it_components | Table of structure components
     "! @parameter rv_line | Resulting line
     "! @raising zcx_excel_handler | Exception if conversion fails
-  methods CONVERT_STRUCTURE_TO_LINE
-    importing
-      !IR_STRUCTURE type ANY
-      value(IT_COMPONENTS) type CL_ABAP_STRUCTDESCR=>COMPONENT_TABLE
-    returning
-      value(RV_LINE) type STRING
-    raising
-      ZCX_EXCEL_HANDLER .
+    METHODS convert_structure_to_line
+      IMPORTING
+        !ir_structure        TYPE any
+        VALUE(it_components) TYPE cl_abap_structdescr=>component_table
+      RETURNING
+        VALUE(rv_line)       TYPE string
+      RAISING
+        zcx_excel_handler .
     "! Convert internal table to XLSX format
     "! @parameter ir_data_ref | Reference to the internal table
     "! @parameter rv_xstring | Resulting XLSX data as XSTRING
-  methods ITAB_TO_XLSX
-    importing
-      !IR_DATA_REF type ref to DATA
-    returning
-      value(RV_XSTRING) type XSTRING .
+    METHODS itab_to_xlsx
+      IMPORTING
+        !ir_data_ref      TYPE REF TO data
+      RETURNING
+        VALUE(rv_xstring) TYPE xstring .
     "! Validate number string
     "! @parameter cv_number_str | Number string to validate
     "! @parameter rv_is_valid | Flag indicating if number is valid
-  methods VALIDATE_NUMBER
-    changing
-      !CV_NUMBER_STR type STRING
-    returning
-      value(RV_IS_VALID) type ABAP_BOOL 
-    raising
-      ZCX_EXCEL_HANDLER .
-    "! Check if running on Windows
-    "! @parameter rv_result | True if running on Windows
-  methods IS_WINDOWS
-    returning
-      value(RV_RESULT) type ABAP_BOOL .
+    METHODS validate_number
+      CHANGING
+        !cv_number_str     TYPE string
+      RETURNING
+        VALUE(rv_is_valid) TYPE abap_bool
+      RAISING
+        zcx_excel_handler .
     "! Generate header line
     "! @parameter it_components | Table of structure components
     "! @parameter rv_line | Resulting header line
-  methods HEADER_LINE
-    importing
-      value(IT_COMPONENTS) type CL_ABAP_STRUCTDESCR=>COMPONENT_TABLE
-    returning
-      value(RV_LINE) type STRING .
-
-  METHODS internal_format
-    IMPORTING
-      !ir_data_ref TYPE REF TO data.
+    METHODS header_line
+      IMPORTING
+        VALUE(it_components) TYPE cl_abap_structdescr=>component_table
+      RETURNING
+        VALUE(rv_line)       TYPE string .
 
 ENDCLASS.
 
 
 
-CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
+CLASS zcl_excel_handler IMPLEMENTATION.
 
 
 * <SIGNATURE>---------------------------------------------------------------------------------------+
@@ -274,10 +266,10 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
                 TRY.
                     cl_abap_datfm=>conv_date_ext_to_int(
                       EXPORTING
-                        im_datext    = lv_value
-                        im_datfmdes  = lv_datfm
+                        im_datext   = lv_value
+                        im_datfmdes = lv_datfm
                       IMPORTING
-                        ex_datint    = DATA(lv_date)
+                        ex_datint   = DATA(lv_date)
                     ).
                   CATCH cx_root.
                     CLEAR lv_date.
@@ -464,39 +456,39 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
       " Download to workstation
       cl_gui_frontend_services=>gui_download(
         EXPORTING
-          filename                  = iv_file_path
-          filetype                  = 'ASC'
-          append                    = iv_append
-          confirm_overwrite         = iv_conf_overwrite
+          filename                = iv_file_path
+          filetype                = 'ASC'
+          append                  = iv_append
+          confirm_overwrite       = iv_conf_overwrite
         IMPORTING
-          filelength                = DATA(lv_bytestransferred)
+          filelength              = DATA(lv_bytestransferred)
         CHANGING
-          data_tab                  = lt_download
+          data_tab                = lt_download
         EXCEPTIONS
-          file_write_error          = 1
-          no_batch                  = 2
-          gui_refuse_filetransfer   = 3
-          invalid_type              = 4
-          no_authority              = 5
-          unknown_error             = 6
-          header_not_allowed        = 7
-          separator_not_allowed     = 8
-          filesize_not_allowed      = 9
-          header_too_long           = 10
-          dp_error_create           = 11
-          dp_error_send             = 12
-          dp_error_write            = 13
-          unknown_dp_error          = 14
-          access_denied             = 15
-          dp_out_of_memory          = 16
-          disk_full                 = 17
-          dp_timeout                = 18
-          file_not_found            = 19
-          dataprovider_exception    = 20
-          control_flush_error       = 21
-          not_supported_by_gui      = 22
-          error_no_gui              = 23
-          OTHERS                    = 24
+          file_write_error        = 1
+          no_batch                = 2
+          gui_refuse_filetransfer = 3
+          invalid_type            = 4
+          no_authority            = 5
+          unknown_error           = 6
+          header_not_allowed      = 7
+          separator_not_allowed   = 8
+          filesize_not_allowed    = 9
+          header_too_long         = 10
+          dp_error_create         = 11
+          dp_error_send           = 12
+          dp_error_write          = 13
+          unknown_dp_error        = 14
+          access_denied           = 15
+          dp_out_of_memory        = 16
+          disk_full               = 17
+          dp_timeout              = 18
+          file_not_found          = 19
+          dataprovider_exception  = 20
+          control_flush_error     = 21
+          not_supported_by_gui    = 22
+          error_no_gui            = 23
+          OTHERS                  = 24
       ).
       IF sy-subrc EQ 0.
         rv_bytes_written = lv_bytestransferred.
@@ -571,39 +563,39 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
       " Download as Excel file on workstation
       cl_gui_frontend_services=>gui_download(
         EXPORTING
-          bin_filesize              = lv_binlen
-          filename                  = iv_file_path
-          filetype                  = 'BIN'
-          confirm_overwrite         = abap_true
+          bin_filesize            = lv_binlen
+          filename                = iv_file_path
+          filetype                = 'BIN'
+          confirm_overwrite       = abap_true
         IMPORTING
-          filelength                = DATA(lv_bytestransferred)
+          filelength              = DATA(lv_bytestransferred)
         CHANGING
-          data_tab                  = lv_filecontenttab
+          data_tab                = lv_filecontenttab
         EXCEPTIONS
-          file_write_error          = 1
-          no_batch                  = 2
-          gui_refuse_filetransfer   = 3
-          invalid_type              = 4
-          no_authority              = 5
-          unknown_error             = 6
-          header_not_allowed        = 7
-          separator_not_allowed     = 8
-          filesize_not_allowed      = 9
-          header_too_long           = 10
-          dp_error_create           = 11
-          dp_error_send             = 12
-          dp_error_write            = 13
-          unknown_dp_error          = 14
-          access_denied             = 15
-          dp_out_of_memory          = 16
-          disk_full                 = 17
-          dp_timeout                = 18
-          file_not_found            = 19
-          dataprovider_exception    = 20
-          control_flush_error       = 21
-          not_supported_by_gui      = 22
-          error_no_gui              = 23
-          OTHERS                    = 24
+          file_write_error        = 1
+          no_batch                = 2
+          gui_refuse_filetransfer = 3
+          invalid_type            = 4
+          no_authority            = 5
+          unknown_error           = 6
+          header_not_allowed      = 7
+          separator_not_allowed   = 8
+          filesize_not_allowed    = 9
+          header_too_long         = 10
+          dp_error_create         = 11
+          dp_error_send           = 12
+          dp_error_write          = 13
+          unknown_dp_error        = 14
+          access_denied           = 15
+          dp_out_of_memory        = 16
+          disk_full               = 17
+          dp_timeout              = 18
+          file_not_found          = 19
+          dataprovider_exception  = 20
+          control_flush_error     = 21
+          not_supported_by_gui    = 22
+          error_no_gui            = 23
+          OTHERS                  = 24
       ).
       IF sy-subrc EQ 0.
         rv_bytes_written = lv_bytestransferred.
@@ -693,23 +685,6 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Private Method ZCL_EXCEL_HANDLER->IS_WINDOWS
-* +-------------------------------------------------------------------------------------------------+
-* | [<-()] RV_RESULT                      TYPE        ABAP_BOOL
-* +--------------------------------------------------------------------------------------</SIGNATURE>
-  METHOD is_windows.
-
-    DATA lv_subrc TYPE sy-subrc.
-
-    CALL FUNCTION 'HLP_OPERATING_SYSTEM_CHECK'
-      IMPORTING
-        returncode = lv_subrc.
-
-    rv_result = COND #( WHEN lv_subrc EQ 0 THEN abap_true ELSE abap_false ).
-
-  ENDMETHOD.
-
 
 * <SIGNATURE>---------------------------------------------------------------------------------------+
 * | Instance Private Method ZCL_EXCEL_HANDLER->ITAB_TO_XLSX
@@ -727,14 +702,16 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
     " Convert internal table to XLSX format
     TRY.
         cl_salv_table=>factory(
-          IMPORTING r_salv_table = DATA(lo_table)
-          CHANGING  t_table      = <fs_data> ).
+          IMPORTING
+            r_salv_table = DATA(lo_table)
+          CHANGING
+            t_table      = <fs_data> ).
 
         " Get field catalog
         DATA(lt_fcat) =
           cl_salv_controller_metadata=>get_lvc_fieldcatalog(
-            r_columns      = lo_table->get_columns( )
-            r_aggregations = lo_table->get_aggregations( ) ).
+          r_columns      = lo_table->get_columns( )
+          r_aggregations = lo_table->get_aggregations( ) ).
 
 
         " If fields are not in DDIC, the add field names as header
@@ -748,8 +725,8 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
 
         DATA(lo_result) =
           cl_salv_ex_util=>factory_result_data_table(
-            r_data         = ir_data_ref
-            t_fieldcatalog = lt_fcat ).
+          r_data         = ir_data_ref
+          t_fieldcatalog = lt_fcat ).
 
         " Create XLSX formatted data
         cl_salv_bs_tt_util=>if_salv_bs_tt_util~transform(
@@ -882,53 +859,173 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
 * +-------------------------------------------------------------------------------------------------+
 * | [--->] IV_FILE_PATH                   TYPE        STRING(optional)
 * | [--->] IV_SERVER                      TYPE        ABAP_BOOL (default =ABAP_FALSE)
+* | [--->] IV_HDR_LINES                   TYPE        I (default =1)
 * | [--->] IR_TABLE                       TYPE REF TO DATA
 * | [!CX!] ZCX_EXCEL_HANDLER
 * +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD upload_xlsx.
 
     DATA:
-      lt_raw    TYPE tt_text_data,
-      lv_errmsg TYPE bapi_msg.
+      lv_line           TYPE string,
+      lt_components     TYPE cl_abap_structdescr=>component_table,
+      lv_num_of_records TYPE i,
+      lt_records        TYPE solix_tab,
+      ls_records        TYPE solix,
+      lv_filelength     TYPE i,
+      lv_headerxstring  TYPE xstring,
+      lr_table          TYPE REF TO data,
+      lt_upload         TYPE STANDARD TABLE OF string,
+      lv_errmsg         TYPE bapi_msg,
+      lv_data           TYPE REF TO data,
+      lo_excel_ref      TYPE REF TO cl_fdt_xl_spreadsheet.
 
     FIELD-SYMBOLS:
-      <fs_table> TYPE STANDARD TABLE.
+      <ft_data>  TYPE STANDARD TABLE,
+      <ft_table> TYPE STANDARD TABLE,
+      <fs_line>  TYPE any,
+      <fs_field> TYPE string.
 
 
-    IF NOT is_windows( ).
-      RAISE EXCEPTION TYPE zcx_excel_handler
-        EXPORTING
-          textid = zcx_excel_handler=>not_supported.
-    ENDIF.
+    ASSIGN ir_table->* TO <ft_table>.
+    REFRESH <ft_table>.
+
+    lt_components = get_table_structure( <ft_table> ).
 
     IF iv_server EQ abap_true.
-      RETURN.   "Only from workstation
-    ENDIF.
 
-    " Prompt for file name when not supplier
-    IF iv_file_path IS INITIAL.
-      iv_file_path = get_file( ).
-    ENDIF.
+      " Upload from application server disk
+      OPEN DATASET iv_file_path FOR INPUT IN BINARY MODE MESSAGE lv_errmsg.
+      IF sy-subrc NE 0.
+        RAISE EXCEPTION TYPE zcx_excel_handler
+          EXPORTING
+            textid = zcx_excel_handler=>file_not_found
+            msgv1  = CONV #( iv_file_path )
+            msgv2  = CONV #( lv_errmsg ).
+      ENDIF.
+      DO.
+        READ DATASET iv_file_path INTO ls_records LENGTH DATA(lv_binlen).
+        IF sy-subrc NE 0.
+          EXIT.
+        ENDIF.
+        lv_filelength = lv_filelength + lv_binlen.
+        APPEND ls_records TO lt_records.
+      ENDDO.
+      CLOSE DATASET iv_file_path.
 
-    ASSIGN ir_table->* TO <fs_table>.
-
-    " Upload Excel format file (only on Windows)
-    CALL FUNCTION 'TEXT_CONVERT_XLS_TO_SAP'
-      EXPORTING
-        i_line_header        = abap_true
-        i_tab_raw_data       = lt_raw
-        i_filename           = CONV localfile( iv_file_path )
-      TABLES
-        i_tab_converted_data = <fs_table>
-      EXCEPTIONS
-        conversion_failed    = 1
-        OTHERS               = 2.
-    IF sy-subrc EQ 0.
-      internal_format( ir_table ).
     ELSE.
+
+      " Prompt for file name when not supplier
+      IF iv_file_path IS INITIAL.
+        iv_file_path = get_file( ).
+      ENDIF.
+
+      " Upload from workstation
+      cl_gui_frontend_services=>gui_upload(
+        EXPORTING
+          filename                = iv_file_path
+          filetype                = 'BIN'
+        IMPORTING
+          filelength              = lv_filelength
+        CHANGING
+          data_tab                = lt_records
+        EXCEPTIONS
+          file_open_error         = 1                " File does not exist and cannot be opened
+          file_read_error         = 2                " Error when reading file
+          no_batch                = 3                " Cannot execute front-end function in background
+          gui_refuse_filetransfer = 4                " Incorrect front end or error on front end
+          invalid_type            = 5                " Incorrect parameter FILETYPE
+          no_authority            = 6                " No upload authorization
+          unknown_error           = 7                " Unknown error
+          bad_data_format         = 8                " Cannot Interpret Data in File
+          header_not_allowed      = 9                " Invalid header
+          separator_not_allowed   = 10               " Invalid separator
+          header_too_long         = 11               " Header information currently restricted to 1023 bytes
+          unknown_dp_error        = 12               " Error when calling data provider
+          access_denied           = 13               " Access to File Denied
+          dp_out_of_memory        = 14               " Not enough memory in data provider
+          disk_full               = 15               " Storage medium is full.
+          dp_timeout              = 16               " Data provider timeout
+          not_supported_by_gui    = 17               " GUI does not support this
+          error_no_gui            = 18               " GUI not available
+          OTHERS                  = 19
+      ).
+      IF sy-subrc NE 0.
+        RAISE EXCEPTION TYPE zcx_excel_handler
+          EXPORTING
+            textid = zcx_excel_handler=>file_not_found
+            msgv1  = CONV #( iv_file_path ).
+      ENDIF.
+
+    ENDIF.
+
+    " Convert binary data to xstring
+    CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
+      EXPORTING
+        input_length = lv_filelength
+      IMPORTING
+        buffer       = lv_headerxstring
+      TABLES
+        binary_tab   = lt_records
+      EXCEPTIONS
+        failed       = 1
+        OTHERS       = 2.
+
+    IF sy-subrc NE 0.
       RAISE EXCEPTION TYPE zcx_excel_handler
         EXPORTING
           textid = zcx_excel_handler=>conversion_failed
+          msgv1  = CONV #( iv_file_path ).
+    ENDIF.
+
+    TRY.
+        lo_excel_ref = NEW cl_fdt_xl_spreadsheet(
+          document_name = iv_file_path
+          xdocument     = lv_headerxstring ).
+      CATCH cx_fdt_excel_core.
+        RAISE EXCEPTION TYPE zcx_excel_handler
+          EXPORTING
+            textid = zcx_excel_handler=>conversion_failed
+            msgv1  = CONV #( iv_file_path ).
+    ENDTRY .
+
+    " Get list of worksheets
+    lo_excel_ref->if_fdt_doc_spreadsheet~get_worksheet_names(
+      IMPORTING
+        worksheet_names = DATA(lt_worksheets) ).
+
+    IF lt_worksheets IS NOT INITIAL.
+      " Use the first worksheet
+      DATA(lv_woksheetname) = VALUE #( lt_worksheets[ 1 ] OPTIONAL ).
+      " Read the worksheet into internal table
+      DATA(lo_data_ref) = lo_excel_ref->if_fdt_doc_spreadsheet~get_itab_from_worksheet( lv_woksheetname ).
+      ASSIGN lo_data_ref->* TO <ft_data>.
+    ENDIF.
+
+    IF <ft_data> IS ASSIGNED.
+      LOOP AT <ft_data> ASSIGNING FIELD-SYMBOL(<fs_data>).
+        CHECK sy-tabix GT iv_hdr_lines.
+        APPEND INITIAL LINE TO <ft_table> ASSIGNING <fs_line>.
+        DATA(lv_ref) = REF #( <fs_line> ).
+        " Convert to CSV line
+        CLEAR lv_line.
+        DO.
+          ASSIGN COMPONENT sy-index OF STRUCTURE <fs_data> TO <fs_field>.
+          IF sy-subrc NE 0.
+            EXIT.
+          ENDIF.
+          IF sy-index EQ 1.
+            lv_line = <fs_field>.
+          ELSE.
+            lv_line = |{ lv_line }{ mv_separator }{ <fs_field> }|.
+          ENDIF.
+        ENDDO.
+        " Convert CSV line to structure
+        convert_line_to_structure( EXPORTING iv_line = lv_line it_components = lt_components ir_line = lv_ref ).
+      ENDLOOP.
+    ELSE.
+      RAISE EXCEPTION TYPE zcx_excel_handler
+        EXPORTING
+          textid = zcx_excel_handler=>file_not_found
           msgv1  = CONV #( iv_file_path ).
     ENDIF.
 
@@ -945,7 +1042,7 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
 
     " Define a regex patterns for the number format with thousands separators and decimals.
     CONSTANTS:
-      lc_pattern1 TYPE string VALUE '^\s*-?\s*(?:\d{1,3}(?:(,?)\d{3})?(?:\1\d{3})*(\.\d*)?|.\d+)\s*$',      " 1,234,567.89   
+      lc_pattern1 TYPE string VALUE '^\s*-?\s*(?:\d{1,3}(?:(,?)\d{3})?(?:\1\d{3})*(\.\d*)?|.\d+)\s*$',      " 1,234,567.89
       lc_pattern2 TYPE string VALUE '^\s*-?\s*(?:\d{1,3}(?:(.?)\d{3})?(?:\1\d{3})*(,\d*)?|,\d+)\s*$',       " 1.234.567,89
       lc_pattern3 TYPE string VALUE '^\s*-?\s*(?:\d{1,3}(?:(\ ?)\d{3})?(?:\1\d{3})*(,\d*)?|,\d+)\s*$',      " 1 234 567,89
       lc_sign     TYPE c VALUE '-'.
@@ -971,37 +1068,37 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
         CLEAR lv_str+lv_offset. "Remove sign for regex
       ENDIF.
       cv_number_str = lv_str.
+    ENDIF.
 
-      FIND REGEX lc_pattern1 IN cv_number_str.  " 1,234,567.89
+    FIND PCRE lc_pattern1 IN cv_number_str.     " 1,234,567.89
+    IF sy-subrc EQ 0.
+      " Remove commas (thousands separators) to get a clean number string
+      REPLACE ALL OCCURRENCES OF ',' IN cv_number_str WITH ''.
+    ELSE.
+      FIND PCRE lc_pattern2 IN cv_number_str.   " 1.234.567,89
       IF sy-subrc EQ 0.
-        " Remove commas (thousands separators) to get a clean number string
-        REPLACE ALL OCCURRENCES OF ',' IN cv_number_str WITH ''.
+        " Remove periods (thousands separators) to get a clean number string
+        REPLACE ALL OCCURRENCES OF '.' IN cv_number_str WITH ''.
+        TRANSLATE cv_number_str USING ',.'.     "Period as decimal point
       ELSE.
-        FIND REGEX lc_pattern2 IN cv_number_str.  " 1.234.567,89
+        FIND PCRE lc_pattern3 IN cv_number_str.  " 1 234 567,89
         IF sy-subrc EQ 0.
-          " Remove periods (thousands separators) to get a clean number string
-          REPLACE ALL OCCURRENCES OF '.' IN cv_number_str WITH ''.
+          " Remove space (thousands separators) to get a clean number string
+          CONDENSE cv_number_str NO-GAPS.
           TRANSLATE cv_number_str USING ',.'.     "Period as decimal point
         ELSE.
-          FIND REGEX lc_pattern3 IN cv_number_str.  " 1 234 567,89
-          IF sy-subrc EQ 0.
-            " Remove space (thousands separators) to get a clean number string
-            CONDENSE cv_number_str NO-GAPS.
-            TRANSLATE cv_number_str USING ',.'.     "Period as decimal point
-          ELSE.
-            " Not a valid number format
-            RAISE EXCEPTION TYPE zcx_excel_handler
+          " Not a valid number format
+          RAISE EXCEPTION TYPE zcx_excel_handler
             EXPORTING
               textid = zcx_excel_handler=>conversion_failed
               msgv1  = CONV #( cv_number_str ).
-          ENDIF.
         ENDIF.
       ENDIF.
+    ENDIF.
 
-      IF lv_sign EQ lc_sign.
-        "Restore the sign
-        cv_number_str = |{ cv_number_str }{ lv_sign }|.
-      ENDIF.
+    IF lv_sign EQ lc_sign.
+      "Restore the sign
+      cv_number_str = |{ cv_number_str }{ lv_sign }|.
     ENDIF.
 
     " Convert the cleaned string to a packed number
@@ -1012,57 +1109,6 @@ CLASS ZCL_EXCEL_HANDLER IMPLEMENTATION.
       CATCH cx_sy_conversion_error.
         rv_is_valid = abap_false.
     ENDTRY.
-
-  ENDMETHOD.
-
-  METHOD internal_format.
-
-    DATA:
-      lo_table_descr  TYPE REF TO cl_abap_tabledescr,
-      lo_struct_descr TYPE REF TO cl_abap_structdescr,
-      lt_components   TYPE cl_abap_structdescr=>component_table,
-      lv_data         TYPE REF TO data.
-
-    FIELD-SYMBOLS:
-      <ft_data>  TYPE ANY TABLE,
-      <fs_line>  TYPE any,
-      <fs_value> TYPE any.
-
-    ASSIGN ir_data_ref->* TO <ft_data>.
-
-    lo_table_descr  ?= cl_abap_structdescr=>describe_by_data( <ft_data> ).
-    lo_struct_descr ?= lo_table_descr->get_table_line_type( ).
-    lt_components = lo_struct_descr->get_components( ).
-
-    LOOP AT <ft_data> ASSIGNING <fs_line>.
-      IF sy-subrc EQ 0.
-        " Make sure all fields with conversion exit APIHA are in internal format
-        LOOP AT lt_components INTO DATA(ls_component).
-          ASSIGN COMPONENT ls_component-name OF STRUCTURE <fs_line> TO <fs_value>.
-          IF sy-subrc EQ 0.
-            DESCRIBE FIELD <fs_value> TYPE DATA(lv_type).
-            CASE lv_type.
-              WHEN 'C'.
-                " Convert to internal format when ALPHA conversion exists
-                DATA(lt_ddic) = ls_component-type->get_ddic_object( ).
-                IF VALUE #( lt_ddic[ 1 ]-convexit OPTIONAL ) EQ 'ALPHA'.
-                  CREATE DATA lv_data TYPE HANDLE ls_component-type.
-                  ASSIGN lv_data TO FIELD-SYMBOL(<fs_data>).
-                  IF <fs_data> IS ASSIGNED.
-                    <fs_data> = <fs_value>.
-                    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
-                      EXPORTING
-                        input  = <fs_data>
-                      IMPORTING
-                        output = <fs_data>.
-                    <fs_value> = <fs_data>.
-                  ENDIF.
-                ENDIF.
-            ENDCASE.
-          ENDIF.
-        ENDLOOP.
-      ENDIF.
-    ENDLOOP.
 
   ENDMETHOD.
 
