@@ -3,12 +3,14 @@
 ## Overview
 
 ZCL_EXCEL_HANDLER is a general Excel upload/download handler class for SAP ABAP systems. It supports both XLSX and CSV file formats for uploading and downloading data between SAP and PC or application server.
+Uploading and downloading a spreadhsheet in ABAP with this class is finally convenient!
 
 ## Features
 
-- Upload and download CSV files
-- Upload and download XLSX files
-- Support for both PC and application server file handling
+- Upload and download XLSX files to and from SAP internal table
+- Upload and download CSV files to and from SAP internal table
+- Supports PC file handling in foreground)(XLSX and CSV)
+- Supports application server file handling in foreground and background (XLSX and CSV)
 - Customizable CSV column separator
 - Header line handling
 - Automatic data type conversion and validation
@@ -88,7 +90,7 @@ ZCL_EXCEL_HANDLER is a general Excel upload/download handler class for SAP ABAP 
 
 ### Notes
 
-- All methods support upload and download on both PC (foreground) and application server (foreground/background)
+- All methods support upload and download on both PC (foreground) and application server (foreground and background)
 - The class handles data type conversions and validations automatically
 - Error handling is implemented using the ZCX_EXCEL_HANDLER exception class
 
