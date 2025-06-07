@@ -9,7 +9,7 @@ Uploading and downloading a spreadhsheet in ABAP with this class is finally conv
 
 - Upload and download XLSX files to and from SAP internal table
 - Upload and download CSV files to and from SAP internal table
-- Supports PC file handling in foreground)(XLSX and CSV)
+- Supports PC file handling in foreground (XLSX and CSV)
 - Supports application server file handling in foreground and background (XLSX and CSV)
 - Customizable CSV column separator
 - Header line handling
